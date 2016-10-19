@@ -8,7 +8,9 @@ This repository includes a simple SAS program (single_level_ccs_assign.sas) to u
 Rationale: HCUP provides code to load the multi-level CCS version, but does not provide much guidance on single-level. 
 
 This SAS code does two things:
+
 1) Loads in the "$DXREF 2015.csv" and "$PRREF 2015.csv" single-level CCS data into a SAS dataset and then converts it to a format
+
 2) Creates a new variable(s) corresponding to the CCS for each ICD-9-CM diagnosis and procedure code in your data. 
 
 The User must set the paths of the $DXREF 2015.csv and $PRREF 2015.csv file and the input data where noted in the code.  Users must also adjust the names of the input data diagnosis and procedure codes, and the desired name of the CCS codes as necessary.  
