@@ -19,11 +19,12 @@
 
 *Step 1: Set path of the $dxref.csv file downloaded from HCUP website;
 	*https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp#download ;
-Filename inraw "SET YOUR LOCATION HERE\$DXREF 2015.csv" ;
+Filename indx "SET YOUR FILE PATH HERE\$DXREF 2015.csv" ;
+Filename inpr "SET YOUR FILE PATH HERE\$PRREF 2015.csv" ;
 
-*Step 2: Run this code below to bring in the CCS codes into a dataset;
-data ccs_in;
-      infile inraw dsd dlm=',' end = eof firstobs=3 missover;
+*Step 2a: Run this code below to bring in the Diagnosis CCS codes into a dataset;
+data ccsdx_in;
+      infile indx dsd dlm=',' end = eof firstobs=3 missover;
          input start : $char5.
               label : $char4.
               ccs_lab : $char70.
@@ -32,7 +33,7 @@ data ccs_in;
               Value3 : $char70.
               ;
       retain hlo "   ";
-      fmtname = "$ccs" ;
+      fmtname = "$dxccs" ;
       type = "C";
       output;
 
@@ -45,21 +46,54 @@ data ccs_in;
 	  drop Value2 Label2 Value3 ccs_lab;
 run;
 
+*Step 2b: Run this code below to bring in the Procedure CCS codes into a dataset;
+data ccspr_in;
+      infile inpr dsd dlm=',' end = eof firstobs=3 missover;
+         input start : $char5.
+              label : $char4.
+              ccs_lab : $char70.
+              Value2 : $char70.
+              ;
+      retain hlo "   ";
+      fmtname = "$prccs" ;
+      type = "C";
+      output;
+
+      if eof then do ;
+         start = "   " ;
+         label = "-99" ;
+         hlo = "o";
+         output ;
+      end ;
+	  drop Value2 ccs_lab;
+run;
+
+*Step 2c: stack the pr and dx ccs formats together;
+data ccs_in;
+	set ccsdx_in ccspr_in;
+run;
+
 *Step 3: Run this code to put the above data into SAS Format;
 proc format cntlin = ccs_in ;
 run;
 
 *Step 4: Set the location and file name of the data set you wish to assign ccs codes to;
-libname in "SET YOUR LOCATION HERE";
+libname in "SET YOUR PATH HERE";
 data test;
-      Set in.fakedata; *set the name of your SAS dataset;
-	  array diag[25] dx1-dx25; *change name of your ICD-9 variables and number;
-	  array cc[25] 3 dxccs1-dxccs25; *set the names of you CCS variables;
-	  do i = 1 to 25;
-	  	cc[i] = put(diag[i],$ccs.);
-		if cc[i] = 0 then cc[i] = . ;
+      Set in.FAKEDATA; *change to the name of your SAS dataset;
+	  array diag[*] DX1-DX25; *change to name of your ICD-9 diagnosis variables and number;
+	  array pro[*] PR1-PR15; *change to name of your ICD-9 procedure variables and number;
+	  array ccd[*] 3 dxccs1-dxccs25; *set the names of your Diagnosis CCS variables;
+	  array ccp[*] 3 prccs1-prccs15; *set the names of your Procedure CCS variables;
+	  do i = 1 to dim(diag);
+	  	ccd[i] = put(diag[i],$dxccs.);
+		if ccd[i] = 0 then ccd[i] = . ;
 	  end;
-	  drop i;
+	  do j = 1 to dim(pro);
+	  	ccp[j] = put(pro[j],$prccs.);
+		if ccp[j] = 0 then ccp[j] = . ;
+	  end;	  	
+	  drop i j;
 run;
 
 *optional: check contents of new data and print some records;
@@ -68,7 +102,7 @@ run;
 proc print data=test (obs=10);
 run;
 proc freq data=test;
-	table dxccs1-dxccs25;
+	table dxccs1-dxccs25 prccs1-prccs15;
 run;
 
 
@@ -393,5 +427,244 @@ proc format;
      2620 = '2620: E Codes: Unspecified'
      2621 = '2621: E Codes: Place of occurrence'
    ;
+
+   Value FLGPRCCS
+       . = '   .: Missing'
+      .A = '   A: Invalid procedure'
+      .C = '   C: Inconsistent'
+      .Z = '   Z: Overall'
+       1 = '   1: Incision and excision of CNS'
+       2 = '   2: Insertion; replacement; or removal of extracranial ventricular shunt'
+       3 = '   3: Laminectomy; excision intervertebral disc'
+       4 = '   4: Diagnostic spinal tap'
+       5 = '   5: Insertion of catheter or spinal stimulator and injection into spinal canal'
+       6 = '   6: Decompression peripheral nerve'
+       7 = '   7: Other diagnostic nervous system procedures'
+       8 = '   8: Other non-OR or closed therapeutic nervous system procedures'
+       9 = '   9: Other OR therapeutic nervous system procedures'
+      10 = '  10: Thyroidectomy; partial or complete'
+      11 = '  11: Diagnostic endocrine procedures'
+      12 = '  12: Other therapeutic endocrine procedures'
+      13 = '  13: Corneal transplant'
+      14 = '  14: Glaucoma procedures'
+      15 = '  15: Lens and cataract procedures'
+      16 = '  16: Repair of retinal tear; detachment'
+      17 = '  17: Destruction of lesion of retina and choroid'
+      18 = '  18: Diagnostic procedures on eye'
+      19 = '  19: Other therapeutic procedures on eyelids; conjunctiva; cornea'
+      20 = '  20: Other intraocular therapeutic procedures'
+      21 = '  21: Other extraocular muscle and orbit therapeutic procedures'
+      22 = '  22: Tympanoplasty'
+      23 = '  23: Myringotomy'
+      24 = '  24: Mastoidectomy'
+      25 = '  25: Diagnostic procedures on ear'
+      26 = '  26: Other therapeutic ear procedures'
+      27 = '  27: Control of epistaxis'
+      28 = '  28: Plastic procedures on nose'
+      29 = '  29: Dental procedures'
+      30 = '  30: Tonsillectomy and/or adenoidectomy'
+      31 = '  31: Diagnostic procedures on nose; mouth and pharynx'
+      32 = '  32: Other non-OR therapeutic procedures on nose; mouth and pharynx'
+      33 = '  33: Other OR therapeutic procedures on nose; mouth and pharynx'
+      34 = '  34: Tracheostomy; temporary and permanent'
+      35 = '  35: Tracheoscopy and laryngoscopy with biopsy'
+      36 = '  36: Lobectomy or pneumonectomy'
+      37 = '  37: Diagnostic bronchoscopy and biopsy of bronchus'
+      38 = '  38: Other diagnostic procedures on lung and bronchus'
+      39 = '  39: Incision of pleura; thoracentesis; chest drainage'
+      40 = '  40: Other diagnostic procedures of respiratory tract and mediastinum'
+      41 = '  41: Other non-OR therapeutic procedures on respiratory system'
+      42 = '  42: Other OR Rx procedures on respiratory system and mediastinum'
+      43 = '  43: Heart valve procedures'
+      44 = '  44: Coronary artery bypass graft (CABG)'
+      45 = '  45: Percutaneous transluminal coronary angioplasty (PTCA)'
+      46 = '  46: Coronary thrombolysis'
+      47 = '  47: Diagnostic cardiac catheterization; coronary arteriography'
+      48 = '  48: Insertion; revision; replacement; removal of cardiac pacemaker or cardioverter/defibrillator'
+      49 = '  49: Other OR heart procedures'
+      50 = '  50: Extracorporeal circulation auxiliary to open heart procedures'
+      51 = '  51: Endarterectomy; vessel of head and neck'
+      52 = '  52: Aortic resection; replacement or anastomosis'
+      53 = '  53: Varicose vein stripping; lower limb'
+      54 = '  54: Other vascular catheterization; not heart'
+      55 = '  55: Peripheral vascular bypass'
+      56 = '  56: Other vascular bypass and shunt; not heart'
+      57 = '  57: Creation; revision and removal of arteriovenous fistula or vessel-to-vessel cannula for dialysis'
+      58 = '  58: Hemodialysis'
+      59 = '  59: Other OR procedures on vessels of head and neck'
+      60 = '  60: Embolectomy and endarterectomy of lower limbs'
+      61 = '  61: Other OR procedures on vessels other than head and neck'
+      62 = '  62: Other diagnostic cardiovascular procedures'
+      63 = '  63: Other non-OR therapeutic cardiovascular procedures'
+      64 = '  64: Bone marrow transplant'
+      65 = '  65: Bone marrow biopsy'
+      66 = '  66: Procedures on spleen'
+      67 = '  67: Other therapeutic procedures; hemic and lymphatic system'
+      68 = '  68: Injection or ligation of esophageal varices'
+      69 = '  69: Esophageal dilatation'
+      70 = '  70: Upper gastrointestinal endoscopy; biopsy'
+      71 = '  71: Gastrostomy; temporary and permanent'
+      72 = '  72: Colostomy; temporary and permanent'
+      73 = '  73: Ileostomy and other enterostomy'
+      74 = '  74: Gastrectomy; partial and total'
+      75 = '  75: Small bowel resection'
+      76 = '  76: Colonoscopy and biopsy'
+      77 = '  77: Proctoscopy and anorectal biopsy'
+      78 = '  78: Colorectal resection'
+      79 = '  79: Local excision of large intestine lesion (not endoscopic)'
+      80 = '  80: Appendectomy'
+      81 = '  81: Hemorrhoid procedures'
+      82 = '  82: Fluoroscopy of the biliary and pancreatic ducts (ERCP, ERC and ERP)'
+      83 = '  83: Biopsy of liver'
+      84 = '  84: Cholecystectomy and common duct exploration'
+      85 = '  85: Inguinal and femoral hernia repair'
+      86 = '  86: Other hernia repair'
+      87 = '  87: Laparoscopy (GI only)'
+      88 = '  88: Abdominal paracentesis'
+      89 = '  89: Exploratory laparotomy'
+      90 = '  90: Excision; lysis peritoneal adhesions'
+      91 = '  91: Peritoneal dialysis'
+      92 = '  92: Other bowel diagnostic procedures'
+      93 = '  93: Other non-OR upper GI therapeutic procedures'
+      94 = '  94: Other OR upper GI therapeutic procedures'
+      95 = '  95: Other non-OR lower GI therapeutic procedures'
+      96 = '  96: Other OR lower GI therapeutic procedures'
+      97 = '  97: Other gastrointestinal diagnostic procedures'
+      98 = '  98: Other non-OR gastrointestinal therapeutic procedures'
+      99 = '  99: Other OR gastrointestinal therapeutic procedures'
+     100 = ' 100: Endoscopy and endoscopic biopsy of the urinary tract'
+     101 = ' 101: Transurethral excision; drainage; or removal urinary obstruction'
+     102 = ' 102: Ureteral catheterization'
+     103 = ' 103: Nephrotomy and nephrostomy'
+     104 = ' 104: Nephrectomy; partial or complete'
+     105 = ' 105: Kidney transplant'
+     106 = ' 106: Genitourinary incontinence procedures'
+     107 = ' 107: Extracorporeal lithotripsy; urinary'
+     108 = ' 108: Indwelling catheter'
+     109 = ' 109: Procedures on the urethra'
+     110 = ' 110: Other diagnostic procedures of urinary tract'
+     111 = ' 111: Other non-OR therapeutic procedures of urinary tract'
+     112 = ' 112: Other OR therapeutic procedures of urinary tract'
+     113 = ' 113: Transurethral resection of prostate (TURP)'
+     114 = ' 114: Open prostatectomy'
+     115 = ' 115: Circumcision'
+     116 = ' 116: Diagnostic procedures; male genital'
+     117 = ' 117: Other non-OR therapeutic procedures; male genital'
+     118 = ' 118: Other OR therapeutic procedures; male genital'
+     119 = ' 119: Oophorectomy; unilateral and bilateral'
+     120 = ' 120: Other operations on ovary'
+     121 = ' 121: Ligation or occlusion of fallopian tubes'
+     122 = ' 122: Removal of ectopic pregnancy'
+     123 = ' 123: Other operations on fallopian tubes'
+     124 = ' 124: Hysterectomy; abdominal and vaginal'
+     125 = ' 125: Other excision of cervix and uterus'
+     126 = ' 126: Abortion (termination of pregnancy)'
+     127 = ' 127: Dilatation and curettage (D&C); aspiration after delivery or abortion'
+     128 = ' 128: Diagnostic dilatation and curettage (D&C)'
+     129 = ' 129: Repair of cystocele and rectocele; obliteration of vaginal vault'
+     130 = ' 130: Other diagnostic procedures; female organs'
+     131 = ' 131: Other non-OR therapeutic procedures; female organs'
+     132 = ' 132: Other OR therapeutic procedures; female organs'
+     133 = ' 133: Episiotomy'
+     134 = ' 134: Cesarean section'
+     135 = ' 135: Forceps; vacuum; and breech delivery'
+     136 = ' 136: Artificial rupture of membranes to assist delivery'
+     137 = ' 137: Other procedures to assist delivery'
+     138 = ' 138: Diagnostic amniocentesis'
+     139 = ' 139: Fetal monitoring'
+     140 = ' 140: Repair of current obstetric laceration'
+     141 = ' 141: Other therapeutic obstetrical procedures'
+     142 = ' 142: Partial excision bone'
+     143 = ' 143: Bunionectomy or repair of toe deformities'
+     144 = ' 144: Treatment; facial fracture or dislocation'
+     145 = ' 145: Treatment; fracture or dislocation of radius and ulna'
+     146 = ' 146: Treatment; fracture or dislocation of hip and femur'
+     147 = ' 147: Treatment; fracture or dislocation of lower extremity (other than hip or femur)'
+     148 = ' 148: Other fracture and dislocation procedure'
+     149 = ' 149: Arthroscopy'
+     150 = ' 150: Division of joint capsule; ligament or cartilage'
+     151 = ' 151: Excision of semilunar cartilage of knee'
+     152 = ' 152: Arthroplasty knee'
+     153 = ' 153: Hip replacement; total and partial'
+     154 = ' 154: Arthroplasty other than hip or knee'
+     155 = ' 155: Arthrocentesis'
+     156 = ' 156: Injections and aspirations of muscles; tendons; bursa; joints and soft tissue'
+     157 = ' 157: Amputation of lower extremity'
+     158 = ' 158: Spinal fusion'
+     159 = ' 159: Other diagnostic procedures on musculoskeletal system'
+     160 = ' 160: Other therapeutic procedures on muscles and tendons'
+     161 = ' 161: Other OR therapeutic procedures on bone'
+     162 = ' 162: Other OR therapeutic procedures on joints'
+     163 = ' 163: Other non-OR therapeutic procedures on musculoskeletal system'
+     164 = ' 164: Other OR therapeutic procedures on musculoskeletal system'
+     165 = ' 165: Breast biopsy and other diagnostic procedures on breast'
+     166 = ' 166: Lumpectomy; quadrantectomy of breast'
+     167 = ' 167: Mastectomy'
+     168 = ' 168: Incision and drainage; skin and subcutaneous tissue'
+     169 = ' 169: Debridement of wound; infection or burn'
+     170 = ' 170: Excision of skin lesion'
+     171 = ' 171: Suture of skin and subcutaneous tissue'
+     172 = ' 172: Skin graft'
+     173 = ' 173: Other diagnostic procedures on skin and subcutaneous tissue'
+     174 = ' 174: Other non-OR therapeutic procedures on skin and breast'
+     175 = ' 175: Other OR therapeutic procedures on skin and breast'
+     176 = ' 176: Organ transplantation (other than bone marrow, corneal or kidney)'
+     177 = ' 177: Computerized axial tomography (CT) scan head'
+     178 = ' 178: CT scan chest'
+     179 = ' 179: CT scan abdomen'
+     180 = ' 180: Other CT scan'
+     181 = ' 181: Myelogram'
+     182 = ' 182: Mammography'
+     183 = ' 183: Routine chest X-ray'
+     184 = ' 184: Intraoperative cholangiogram'
+     185 = ' 185: Upper gastrointestinal X-ray'
+     186 = ' 186: Lower gastrointestinal X-ray'
+     187 = ' 187: Intravenous pyelogram'
+     188 = ' 188: Cerebral arteriogram'
+     189 = ' 189: Contrast aortogram'
+     190 = ' 190: Contrast arteriogram of femoral and lower extremity arteries'
+     191 = ' 191: Arterio- or venogram (not heart and head)'
+     192 = ' 192: Diagnostic ultrasound of head and neck'
+     193 = ' 193: Diagnostic ultrasound of heart (echocardiogram)'
+     194 = ' 194: Diagnostic ultrasound of gastrointestinal tract'
+     195 = ' 195: Diagnostic ultrasound of urinary tract'
+     196 = ' 196: Diagnostic ultrasound of abdomen or retroperitoneum'
+     197 = ' 197: Other diagnostic ultrasound'
+     198 = ' 198: Magnetic resonance imaging'
+     199 = ' 199: Electroencephalogram (EEG)'
+     200 = ' 200: Nonoperative urinary system measurements'
+     201 = ' 201: Cardiac stress tests'
+     202 = ' 202: Electrocardiogram'
+     203 = ' 203: Electrographic cardiac monitoring'
+     204 = ' 204: Swan-Ganz catheterization for monitoring'
+     205 = ' 205: Arterial blood gases'
+     206 = ' 206: Microscopic examination (bacterial smear; culture; toxicology)'
+     207 = ' 207: Nuclear medicine imaging of bone'
+     208 = ' 208: Nuclear medicine imaging of pulmonary'
+     209 = ' 209: Non-imaging nuclear medicine probe or assay'
+     210 = ' 210: Other nuclear medicine imaging'
+     211 = ' 211: Radiation therapy'
+     212 = ' 212: Diagnostic physical therapy'
+     213 = ' 213: Physical therapy exercises; manipulation; and other procedures'
+     214 = ' 214: Traction; splints; and other wound care'
+     215 = ' 215: Other physical therapy and rehabilitation'
+     216 = ' 216: Respiratory intubation and mechanical ventilation'
+     217 = ' 217: Other respiratory therapy'
+     218 = ' 218: Psychological and psychiatric evaluation and therapy'
+     219 = ' 219: Alcohol and drug rehabilitation/detoxification'
+     220 = ' 220: Ophthalmologic and otologic diagnosis and treatment'
+     221 = ' 221: Nasogastric tube'
+     222 = ' 222: Blood transfusion'
+     223 = ' 223: Enteral and parenteral nutrition'
+     224 = ' 224: Cancer chemotherapy'
+     225 = ' 225: Conversion of cardiac rhythm'
+     226 = ' 226: Other diagnostic radiology and related techniques'
+     227 = ' 227: Other diagnostic procedures'
+     228 = ' 228: Prophylactic vaccinations and inoculations'
+     229 = ' 229: Nonoperative removal of foreign body'
+     230 = ' 230: Extracorporeal shock wave other than urinary'
+     231 = ' 231: Other therapeutic procedures'
+   ;
+
    run;
 
