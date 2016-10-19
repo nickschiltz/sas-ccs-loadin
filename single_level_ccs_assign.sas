@@ -9,9 +9,10 @@
 *  FILE: single_level_ccs_assign.sas
 *
 *  The purpose of this program is to assign a clinical classification
-*  		software (CCS) single-level code for each ICD-9-CM diagnosis code 
-*		in a claims or similar type data. The program loads in the formats
-*		from the file provided on the HCUP website. It then creates a 
+*  		software (CCS) single-level code for each ICD-9-CM diagnosis and
+*		procedure code in a claims or similar type data.
+*		The program loads in the formats from the file
+*		provided on the HCUP website. It then creates a 
 *		format file of these CCS codes. The final step is to apply the 
 *		formats to your data.
 *		
