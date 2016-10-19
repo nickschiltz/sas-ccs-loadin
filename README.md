@@ -3,7 +3,9 @@ SAS code to assign Clinical Classification Software (CCS) values based on ICD-9-
 
 Version 0.1
 
-This repository includes a simple SAS program (single_level_ccs_assign.sas) to use the single-level Clinical Classification Software (CCS) provided by the Agency for Healthcare Research and Quality's (AHRQ) Healthcare Cost and Utilization Project (HCUP). The single-level CCS codes are available on the HCUP website (https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp).  HCUP provides code to load the multilevel version, but does not provide much guidance on single-level.
+This repository includes a simple SAS program (single_level_ccs_assign.sas) to use the single-level Clinical Classification Software (CCS) provided by the Agency for Healthcare Research and Quality's (AHRQ) Healthcare Cost and Utilization Project (HCUP). The single-level CCS codes are available on the HCUP website (https://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp).  
+
+Rationale: HCUP provides code to load the multi-level CCS version, but does not provide much guidance on single-level. 
 
 This SAS code does two things:
 1) Loads in the "$DXREF 2015.csv" and "$PRREF 2015.csv" single-level CCS data into a SAS dataset and then converts it to a format
