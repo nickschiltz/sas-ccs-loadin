@@ -81,11 +81,11 @@ run;
 *Step 4: Set the location and file name of the data set you wish to assign ccs codes to;
 libname in "SET YOUR PATH HERE";
 data test;
-      Set in.FAKEDATA; *change to the name of your SAS dataset;
-	  array diag[*] DX1-DX25; *change to name of your ICD-9 diagnosis variables and number;
-	  array pro[*] PR1-PR15; *change to name of your ICD-9 procedure variables and number;
-	  array ccd[*] 3 dxccs1-dxccs25; *set the names of your Diagnosis CCS variables;
-	  array ccp[*] 3 prccs1-prccs15; *set the names of your Procedure CCS variables;
+      Set in.FAKECLAIMS; *change to the name of your SAS dataset;
+	  array diag[*] ICD9_DGNS_CD_1-ICD9_DGNS_CD_10; *change to name of your ICD-9 diagnosis variables;
+	  array pro[*] ICD9_PRCDR_CD_1-ICD9_PRCDR_CD_6; *change to name of your ICD-9 procedure variables and number;
+	  array ccd[*] 3 dxccs1-dxccs10; *set the names of your Diagnosis CCS variables;
+	  array ccp[*] 3 prccs1-prccs6; *set the names of your Procedure CCS variables;
 	  do i = 1 to dim(diag);
 	  	ccd[i] = put(diag[i],$dxccs.);
 		if ccd[i] = 0 then ccd[i] = . ;
@@ -103,7 +103,7 @@ run;
 proc print data=test (obs=10);
 run;
 proc freq data=test;
-	table dxccs1-dxccs25 prccs1-prccs15;
+	table dxccs1-dxccs10 prccs1-prccs6;
 run;
 
 
