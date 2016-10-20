@@ -15,6 +15,6 @@ This SAS code does two things:
 
 The User must set the paths of the $DXREF 2015.csv and $PRREF 2015.csv file and the input data where noted in the code.  Users must also adjust the names of the input data diagnosis and procedure codes, and the desired name of the CCS codes as necessary.  
 
-A sample synthetic data file (fakedata.sas7bdat) with 100 records is included for testing. The file includes a unique id, age, gender, mortality, and up to 25 ICD-9-CM diagnosis codes, and 15 ICD-9-CM procedure codes for each record.
+A sample synthetic data file (fakeclaims.sas7bdat) with 100 records of inpatient data is included for testing. The file contains 36 variables including 10 ICD-9-CM discharge diagnosis codes, and 6 ICD-9-CM procedure codes for each record, and 1 additional admission diagnosis ICD-9-CM codes. The file is a 100 record sample pulled from the DE-SynPUF (de-identified synthetic public use file) inpatient sample 04 from CMS, and contains not HIPAA identifiers (because it is fake).
 
 Future versions of this program may include converting the program to a SAS macro. 
